@@ -127,11 +127,11 @@
           <li>If the node is <code>&lt;hr&gt;</code> or <code>&lt;br&gt;</code>,
           return a list containing a string containing a single newline character.
           <li>If the node's computed value of <code>display</code> is <code>table-cell</code>,
-          and the node's next sibling's computed value of <code>display</code> is also <code>table-cell</code>,
+          and the node's CSS box is not the last table-cell box of its enclosing table-row box,
           append a string containing a single tab character to <em>inner</em> and return
           the result.
           <li>If the node's computed value of <code>display</code> is <code>table-row</code>,
-          and the node's next sibling's computed value of <code>display</code> is also <code>table-row</code>,
+          and the node's CSS box is not the last table-row box of the nearest ancestor inner-table box,
           append a string containing a single newline character to <em>inner</em> and return
           the result.
           <li>If the node is a <code>&lt;p&gt;</code> element, add a "required line break count of 2" item
