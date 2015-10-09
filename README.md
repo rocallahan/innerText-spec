@@ -1,5 +1,7 @@
-# InputDeviceCapabilities
+# innerText
 This repository contains a [proposed specification](http://rocallahan.github.io/innerText-spec/index.html) for the DOM 'innerText' property.
+
+There are also test suites for [setting innerText](http://rocallahan.github.io/innerText-spec/setter-tests.html) and [getting innerText](http://rocallahan.github.io/innerText-spec/getter-tests.html).
 
 ## References
 * [WICG Discourse thread](http://discourse.wicg.io/t/standardizing-innertext/799)

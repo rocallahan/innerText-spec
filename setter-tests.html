@@ -59,7 +59,9 @@ function writeResults(context, plain, expected, t, msg) {
 function testText(context, plain, expectedText, msg) {
   var e = setupTest(context, plain);
   var t;
-  if (e.firstChild.nodeType != Node.TEXT_NODE) {
+  if (!e.firstChild) {
+    t = "!!! Found no children";
+  } else if (e.firstChild.nodeType != Node.TEXT_NODE) {
     t = "!!! Found non-text node";
   } else if (e.firstChild.nextSibling) {
     t = "!!! Found more than one node";
