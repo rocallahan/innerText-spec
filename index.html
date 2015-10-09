@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>innerText</title>
+    <meta charset='utf-8'>
+    <script src='https://www.w3.org/Tools/respec/respec-w3c-common'
+            async class='remove'></script>
+    <script class='remove'>
+      var respecConfig = {
+          specStatus: "unofficial",
+          shortName: "innerText",
+          edDraftURI: "https://rocallahan.github.io/innerText-spec/index.html",
+          testSuiteURI: "http://rocallahan.github.io/innerText-spec/tests/",
+          editors: [
+                {   name:       "Robert O'Callahan",
+                    url:        "http://robert.ocallahan.org",
+                    company:    "Mozilla",
+                    companyURL: "http://mozilla.com/" }
+          ],
+          otherLinks: [{
+            key: 'Participation',
+            data: [
+                {
+                    value: 'GitHub repository',
+                    href: 'https://github.com/rocallahan/innerText-spec/'
+                }, {
+                    value: 'File a bug / view open issues',
+                    href: 'https://github.com/rocallahan/innerText-spec/issues'
+                }, {
+                    value: 'Feedback / discussion in the WICG',
+                    href: 'http://discourse.wicg.io/t/standardizing-innertext/799'
+                }
+             ]
+          }],
+      };
+    </script>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+        This document aims to specify behavior for the DOM <code>innerText</code> property.
+      </p>
+    </section>
+
+    <section id="intro" class="informative">
+      <h2>Introduction</h2>
+      <p>
+        <code>innerText</code> was introduced by Internet Explorer but never specified in any
+        official document. It was later implemented (incompatibly) by Webkit; this implementation
+        was inherited by Blink. The intent of <code>innerText</code>, as it has evolved, seems to
+        be to return the "rendered text" of an element, similar to what browsers produce when
+        equivalent HTML content is copied to the clipboard as plaintext.
+      </p>
+      <p>
+        There is no "one true way" to convert HTML, or rich text in general, to plain text.
+        Such conversion can generally be implemented effectively in Javascript with existing DOM APIs.
+        Therefore, there is no need to have this feature in the Web platform, and we might
+        be better off if it was delegated to libraries. However, <code>innerText</code> is
+        implemented in popular browsers and is used by many Web sites. Therefore it should be
+        specified. Currently the goal is to produce a reasonably simple specification that is
+        Web-compatible and that browser vendors are willing to implement.
+      </p>
+      <p>
+        For consistency, <code>Selection.toString()</code> should be defined the same way.
+      </p>
+    </section>
+
+    <section>
+      <h2>Setting <code>innerText</code></h2>
+      The innerText IDL attribute is a DOMString on the HTMLElement interface.
+      <p>
+        The original intent of the <code>innerText</code> setter seems to be that setting an HTML element's <code>innerText</code>
+        to a string will render that string visually. To that end, both Chrome and Edge (as of October 2015)
+        convert <code>\n</code> and <code>\r</code> characters to <code>&lt;br&gt;</code> elements.
+        They also both convert a <code>\r\n</code> pair to a single
+        <code>&lt;br&gt;</code>. Edge goes further, converting some whitespace characters to <code>&amp;nbsp;</code> to avoid
+        whitespace trimming and collapsing &mdash; but Chrome does not.
+      </p>
+      <p>
+        There is already a simple and completely accurate way to have an HTML element render a string as-is:
+        make the element <code>white-space:pre</code> and set its <code>textContent</code>. Therefore
+        we specify <code>innerText</code> to do the simplest thing compatible with what browsers do,
+        i.e. Chrome's behavior. So <code>innerText</code> replaces the child nodes of the element with
+        new child nodes created as follows, processing the string in order:
+        <ol>
+        <li>For each run of text not including <code>\r</code> or <code>\n</code>, create a text node containing that text.
+        <li>For each <code>\r\n</code> character pair, create a <code>&lt;br&gt;</code> element.
+        <li>For each <code>\r</code> or <code>\n</code> not part of a <code>\r\n</code> character pair, create a <code>&lt;br&gt;</code> element.
+        </ol>
+      </p>
+    </section>
+    <section dfn-for="innerText">
+      <h2>Getting <code>innerText</code></h2>
+      <p>
+        The intent here seems to be that getting an element's <code>innerText</code>
+        returns its text "as rendered". All browsers seem to have implemented a different set of heuristics
+        for approximating that, typically approximating some subset of CSS processing.
+      </p>
+      <p>
+        We can avoid specifying processing rules that duplicate and approximate some subset of CSS
+        by specifying <code>innerText</code>'s getter in terms of the rendered text produced by CSS
+        layout of the element. This won't work for elements which have no CSS boxes (e.g.
+        <code>display:none</code> elements and elements not in a document), but Webkit/Blink
+        already bail out for those elements and just return their <code>textContent</code>. So
+        for <code>display:none</code> elements and elements not in a document, let <code>innerText</code>
+        return the same value as <code>textContent</code>. For other elements, apply the following algorithm:
+        <ol>
+        <li>First compute a list of items each of which may be a string or a "required line break count",
+        a positive integer, by applying the following recursive procedure to each child node of the element in DOM
+        order and concatenating the results. (Intuitively, a "required line break count" item means that a certain
+        number of line breaks must appear at that point, but they can be collapsed with the line breaks induced
+        by adjacent "required line break count" items, reminiscient to CSS margin-collapsing.)
+          <ol>
+          <li>If the node's computed value of <code>display</code> is <code>none</code>,
+          return an empty list.
+          <li>If the node is a replaced element other than <code>&lt;button&gt;</code>, <code>&lt;fieldset&gt;</code>, or
+          <code>&lt;legend&gt;</code>, let <em>inner</em> be an empty list, otherwise
+          let it be the result of recursively applying this procedure to each
+          child of the node and concatenating the results (producing a list of items).
+          <li>If the node's computed value of <code>visibility</code> is <code>hidden</code>,
+          return <em>inner</em>.
+          <li>If the node is a text node, then for each CSS text box produced by the node,
+          in content order, compute the text of the box after application of the CSS white-space
+          processing rules and text-transform rules (sections 4 and 2 of CSS3 Text), and
+          return a list of the resulting strings that are non-empty. The CSS white-space
+          processing rules are applied as if there are no line breaks due to text wrapping.
+          <li>If the node is <code>&lt;hr&gt;</code> or <code>&lt;br&gt;</code>,
+          return a list containing a string containing a single newline character.
+          <li>If the node's computed value of <code>display</code> is <code>table-cell</code>,
+          and the node's next sibling's computed value of <code>display</code> is also <code>table-cell</code>,
+          append a string containing a single tab character to <em>inner</em> and return
+          the result.
+          <li>If the node's computed value of <code>display</code> is <code>table-row</code>,
+          and the node's next sibling's computed value of <code>display</code> is also <code>table-row</code>,
+          append a string containing a single newline character to <em>inner</em> and return
+          the result.
+          <li>If the node is a <code>&lt;p&gt;</code> element, add a "required line break count of 2" item
+          at the beginning and end of <em>inner</em>, and return the result.
+          <li>If the node's computed value of <code>display</code> is "block-level" (see CSS3
+          Display), add a "required line break count of 1" item at the
+          beginning and end of <em>inner</em>, and return the result.
+          <li>Otherwise return <em>inner</em>.
+          </ol>
+        <li>Delete any runs of consecutive "required line break count" items at the
+        start or end of the list.
+        <li>Replace each remaining run of consecutive "required line break count" items with a string
+        consisting of as many newline characters as the maximum of the values in the "required line
+        break count" items.
+        <li>Return the concatenation of the string items.
+        </ol>
+      </p>
+      <p>This algorithm is amenable to being generalized to work on a <code>Range</code>.
+      Then we can use it as the basis for <code>Selection.toString()</code> and optionally
+      expose it directly on <code>Range</code>.
+      <p>In this algorithm, processing of text nodes is heavily CSS-based but processing of
+      elements is mainly based on DOM structure and the computed value of <code>display</code>.
+      Alternatively we could replace DOM traversal with traversal of the CSS boxes generated
+      by the element and its descendants. For example, that approach would naturally lead to
+      generated content and shadow DOM content being included in <code>innerText</code>, while
+      the above algorithm naturally excludes such content. That approach seems likely to be
+      less Web-compatible than the above algorithm, more surprising for Web developers in
+      edge cases, and no simpler than the above algorithm.
+    </section>
+  </body>
+</html>
