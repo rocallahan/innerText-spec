@@ -3,8 +3,8 @@ This repository contains a [proposed specification](http://rocallahan.github.io/
 
 There are test suites for [setting innerText](http://rocallahan.github.io/innerText-spec/setter-tests.html) and [getting innerText](http://rocallahan.github.io/innerText-spec/getter-tests.html) directly in browsers.
 
-There are also testharness.js versions of [those](http://rocallahan.github.io/innerText-spec/setter.html)
-[tests](http://rocallahan.github.io/innerText-spec/getter.html).
+There are also testharness.js versions of [those](http://rocallahan.github.io/innerText-spec/tests/setter.html)
+[tests](http://rocallahan.github.io/innerText-spec/tests/getter.html).
 
 ## References
 * [WICG Discourse thread](http://discourse.wicg.io/t/standardizing-innertext/799)

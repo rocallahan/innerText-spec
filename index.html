@@ -88,6 +88,12 @@
         <li>For each <code>\r</code> or <code>\n</code> not part of a <code>\r\n</code> character pair, create a <code>&lt;br&gt;</code> element.
         </ol>
       </p>
+      <p><pre class="example highlight">&lt;p id='e'&gt;
+&lt;script&gt;
+e.innerText = "Hello\nkitty";
+var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
+&lt;/script&gt;</pre>
+      <p>For more examples see the <a href="setter-tests.html">setter tests</a>.
     </section>
     <section dfn-for="innerText">
       <h2>Getting <code>innerText</code></h2>
@@ -169,6 +175,18 @@
       styles are implicitly honoured. Avoiding dependence on layout would add implementation
       complexity (to Gecko, at least), because it's tricky to compute the correct styles
       for text as if first-line did not apply.
+      <p><pre class="example highlight">&lt;p id='e'&gt;Hello
+   kitty
+&lt;script&gt;
+var s = e.innerText; // "Hello kitty"
+&lt;/script&gt;</pre>
+      <p><pre class="example highlight">&lt;pre id='e'&gt;Hello
+   kitty
+&lt;/pre&gt;
+&lt;script&gt;
+var s = e.innerText; // "Hello\n   kitty\n"
+&lt;/script&gt;</pre>
+      <p>For more examples see the <a href="getter-tests.html">getter tests</a>.
     </section>
   </body>
 </html>
