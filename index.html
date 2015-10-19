@@ -101,45 +101,45 @@
         by specifying <code>innerText</code>'s getter in terms of the rendered text produced by CSS
         layout of the element. This won't work for elements which have no CSS boxes (e.g.
         <code>display:none</code> elements and elements not in a document), but Webkit/Blink
-        already bail out for those elements and just return their <code>textContent</code>. So
-        for <code>display:none</code> elements and elements not in a document, let <code>innerText</code>
-        return the same value as <code>textContent</code>. For other elements, apply the following algorithm:
+        already bail out for those elements and just return their <code>textContent</code>, so we can
+        follow suit. So:
         <ol>
-        <li>First compute a list of items each of which may be a string or a "required line break count",
+        <li>If the element is <code>display:none</code> or not in a document with a browsing context,
+        return the same value as the element's <code>textContent</code>.
+        <li>Compute a list of items each of which may be a string or a "required line break count",
         a positive integer, by applying the following recursive procedure to each child node of the element in DOM
         order and concatenating the results. (Intuitively, a "required line break count" item means that a certain
         number of line breaks must appear at that point, but they can be collapsed with the line breaks induced
         by adjacent "required line break count" items, reminiscient to CSS margin-collapsing.)
           <ol>
-          <li>If the node's computed value of <code>display</code> is <code>none</code>,
-          return an empty list.
-          <li>If the node is a replaced element other than <code>&lt;button&gt;</code>, <code>&lt;fieldset&gt;</code>, or
-          <code>&lt;legend&gt;</code>, let <em>inner</em> be an empty list, otherwise
-          let it be the result of recursively applying this procedure to each
+          <li>Let <em>items</em> be the result of recursively applying this procedure to each
           child of the node and concatenating the results (producing a list of items).
+          <li>If the node has no associated CSS box, return <em>items</em>. (Note:
+          <em>items</em> may be non-empty due to <code>display:contents</code>.)
           <li>If the node's computed value of <code>visibility</code> is <code>hidden</code>,
-          return <em>inner</em>.
+          return <em>items</em>.
           <li>If the node is a text node, then for each CSS text box produced by the node,
           in content order, compute the text of the box after application of the CSS white-space
           processing rules and text-transform rules (sections 4 and 2 of CSS3 Text), and
           return a list of the resulting strings that are non-empty. The CSS white-space
-          processing rules are applied as if there are no line breaks due to text wrapping.
-          <li>If the node is <code>&lt;hr&gt;</code> or <code>&lt;br&gt;</code>,
-          return a list containing a string containing a single newline character.
+          processing rules are slightly modified: collapsible spaces at the end of lines
+          are always collapsed, but they are only removed if the line is the last line of the block, or it ends with a
+          <code>&lt;br&gt;</code> element. Soft hyphens should be preserved.
+          <li>If the node is a <code>&lt;br&gt;</code>,
+          append a string containing a single newline character to <em>items</em>.
           <li>If the node's computed value of <code>display</code> is <code>table-cell</code>,
           and the node's CSS box is not the last table-cell box of its enclosing table-row box,
-          append a string containing a single tab character to <em>inner</em> and return
-          the result.
+          append a string containing a single tab character to <em>items</em>.
           <li>If the node's computed value of <code>display</code> is <code>table-row</code>,
-          and the node's CSS box is not the last table-row box of the nearest ancestor inner-table box,
-          append a string containing a single newline character to <em>inner</em> and return
-          the result.
+          and the node's CSS box is not the last table-row box of the nearest ancestor items-table box,
+          append a string containing a single newline character to <em>items</em>.
           <li>If the node is a <code>&lt;p&gt;</code> element, add a "required line break count of 2" item
-          at the beginning and end of <em>inner</em>, and return the result.
-          <li>If the node's computed value of <code>display</code> is "block-level" (see CSS3
-          Display), add a "required line break count of 1" item at the
-          beginning and end of <em>inner</em>, and return the result.
-          <li>Otherwise return <em>inner</em>.
+          at the beginning and end of <em>items</em>.
+          <li>If the node's used value of <code>display</code> is "block-level" (see CSS3
+          Display) or <code>table-caption</code>, add a "required line break count of 1" item at the
+          beginning and end of <em>items</em>. (Note: floats and absolutely-positioned elements
+          fall into this category.)
+          <li>Return <em>items</em>.
           </ol>
         <li>Delete any runs of consecutive "required line break count" items at the
         start or end of the list.
@@ -149,6 +149,10 @@
         <li>Return the concatenation of the string items.
         </ol>
       </p>
+      <p>Note that descendant nodes of most replaced elements (e.g. <code>&lt;textarea&gt;</code>,
+      <code>&lt;select&gt;</code>, and <code>&lt;video&gt;</code> --- but not <code>&lt;button&gt;</code>)
+      are not rendered by CSS, strictly speaking, and therefore have no CSS boxes for the purposes
+      of this algorithm.
       <p>This algorithm is amenable to being generalized to work on a <code>Range</code>.
       Then we can use it as the basis for <code>Selection.toString()</code> and optionally
       expose it directly on <code>Range</code>.
@@ -160,6 +164,11 @@
       the above algorithm naturally excludes such content. That approach seems likely to be
       less Web-compatible than the above algorithm, more surprising for Web developers in
       edge cases, and no simpler than the above algorithm.
+      <p>This algorithm is depends on computed styles and on layout (due to <code>::first-line</code>
+      affecting <code>text-transform</code> --- <code>::first-line</code> and <code>::first-letter</code>
+      styles are implicitly honoured. Avoiding dependence on layout would add implementation
+      complexity (to Gecko, at least), because it's tricky to compute the correct styles
+      for text as if first-line did not apply.
     </section>
   </body>
 </html>

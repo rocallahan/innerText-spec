@@ -6,6 +6,9 @@
 .itable { display:inline-table; }
 .row { display:table-row; }
 .cell { display:table-cell; }
+.first-line-uppercase::first-line { text-transform:uppercase; }
+.first-letter-uppercase::first-letter { text-transform:uppercase; }
+.first-letter-float::first-letter { float:left; }
 #results {
   border-collapse:collapse;
   max-width:100%;
@@ -24,7 +27,6 @@
   right:0;
 }
 </style>
-<p>DISCLAIMER: the following "expected" results are tentative and subject to deliberate change and correction of errors. Currently they are for informational purposes only.
 <table id="results">
   <thead>
     <tr><td>HTML<td>Expected innerText<td>Result
@@ -33,8 +35,9 @@
 </table>
 <div id="container"></div>
 <script>
+var useSelection = false;
 function myInnerText(e) {
-  if ("innerText" in e) {
+  if (!useSelection) {
     return e.innerText;
   }
   var s = window.getSelection();
@@ -52,9 +55,16 @@ function clickResult(event) {
   }
   alert(vals.join(','));
 }
-function test(html, expectedPlain, msg) {
+function testText(html, expectedPlain, msg) {
   container.innerHTML = html;
-  var e = container.firstChild;
+  var e = document.getElementById('target');
+  if (!e) {
+    e = container.firstChild;
+  }
+  var pokes = document.getElementsByClassName('poke');
+  for (var i = 0; i < pokes.length; ++i) {
+    pokes[i].textContent = 'abc';
+  }
   while (e && e.nodeType != Node.ELEMENT_NODE) {
     e = e.nextSibling;
   }
@@ -78,6 +88,12 @@ function test(html, expectedPlain, msg) {
   if (t == expectedPlain) {
     row.classList.add("ok");
   } else {
+    if (t == undefined) {
+      t = "";
+    }
+    if (expectedPlain == undefined) {
+      expectedPlain = "";
+    }
     for (var i = 0; i < Math.min(t.length, expectedPlain.length); ++i) {
       if (t.charCodeAt(i) != expectedPlain.charCodeAt(i)) {
         td4.textContent += " (chars differ at " + i + ": " +
@@ -91,465 +107,5 @@ function test(html, expectedPlain, msg) {
   }
   results_body.appendChild(row);
 }
-
-test("<div>abc", "abc", "Simplest possible test");
-
-/**** white-space:normal ****/
-
-// Gecko 44.0 nightly fails; preserves leading/trailing whitespace
-test("<div> abc", "abc", "Leading whitespace removed");
-
-// Gecko 44.0 nightly fails; preserves leading/trailing whitespace
-// Edge 20.10240.16384.0 fails; preserves trailing whitespace
-test("<div>abc ", "abc", "Trailing whitespace removed");
-
-test("<div>abc  def", "abc def", "Internal whitespace compressed");
-test("<div>abc\ndef", "abc def", "\\n converted to space");
-test("<div>abc\rdef", "abc def", "\\r converted to space");
-
-// Chrome 47.0.2522.1 fails; preserves tabs
-test("<div>abc\tdef", "abc def", "\\t converted to space");
-
-/**** <pre> ****/
-
-test("<pre> abc", " abc", "Leading whitespace preserved");
-test("<pre>abc ", "abc ", "Trailing whitespace preserved");
-
-// Gecko 44.0 nightly fails; collapses whitespace
-test("<pre>abc  def", "abc  def", "Internal whitespace preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts \n to \r\n
-test("<pre>abc\ndef", "abc\ndef", "\\n preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts \r to \r\n
-test("<pre>abc\rdef", "abc\ndef", "\\r converted to newline");
-
-// Gecko 44.0 nightly fails; converts to space
-test("<pre>abc\tdef", "abc\tdef", "\\t preserved");
-
-/**** <div style="white-space:pre"> ****/
-
-test("<div style='white-space:pre'> abc", " abc", "Leading whitespace preserved");
-test("<div style='white-space:pre'>abc ", "abc ", "Trailing whitespace preserved");
-
-// Gecko 44.0 nightly fails; collapses whitespace
-test("<div style='white-space:pre'>abc  def", "abc  def", "Internal whitespace preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts \n to \r\n
-test("<div style='white-space:pre'>abc\ndef", "abc\ndef", "\\n preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts \r to \r\n
-test("<div style='white-space:pre'>abc\rdef", "abc\ndef", "\\r converted to newline");
-
-// Gecko 44.0 nightly fails; converts to space
-test("<div style='white-space:pre'>abc\tdef", "abc\tdef", "\\t preserved");
-
-/**** <span style="white-space:pre"> ****/
-
-test("<span style='white-space:pre'> abc", " abc", "Leading whitespace preserved");
-test("<span style='white-space:pre'>abc ", "abc ", "Trailing whitespace preserved");
-
-// Gecko 44.0 nightly fails; collapses whitespace
-// Edge 20.10240.16384.0 fails; collapses whitespace
-test("<span style='white-space:pre'>abc  def", "abc  def", "Internal whitespace preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts to space
-test("<span style='white-space:pre'>abc\ndef", "abc\ndef", "\\n preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts to space
-test("<span style='white-space:pre'>abc\rdef", "abc\ndef", "\\r converted to newline");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts to space
-test("<span style='white-space:pre'>abc\tdef", "abc\tdef", "\\t preserved");
-
-/**** <div style="white-space:pre-line"> ****/
-
-// Gecko 44.0 nightly fails; preserves whitespace
-test("<div style='white-space:pre-line'> abc", "abc", "Leading whitespace removed");
-
-// Gecko 44.0 nightly fails; preserves whitespace
-// Edge 20.10240.16384.0 fails; preserves trailing whitespace
-test("<div style='white-space:pre-line'>abc ", "abc", "Trailing whitespace removed");
-
-test("<div style='white-space:pre-line'>abc  def", "abc def", "Internal whitespace collapsed");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts to space
-// Chrome 47.0.2522.1 fails; converts to space
-test("<div style='white-space:pre-line'>abc\ndef", "abc\ndef", "\\n preserved");
-
-// Gecko 44.0 nightly fails; converts to space
-// Edge 20.10240.16384.0 fails; converts to space
-// Chrome 47.0.2522.1 fails; converts to space
-test("<div style='white-space:pre-line'>abc\rdef", "abc\ndef", "\\r converted to newline");
-
-// Chrome 47.0.2522.1 fails; preserves tab
-test("<div style='white-space:pre-line'>abc\tdef", "abc def", "\\t converted to space");
-
-/**** Collapsing whitespace across element boundaries ****/
-
-// Edge 20.10240.16384.0 fails; doesn't collapse
-test("<div><span>abc </span> def", "abc def", "Whitespace collapses across element boundaries");
-
-// Edge 20.10240.16384.0 fails; doesn't collapse
-test("<div><span>abc </span><span></span> def", "abc def", "Whitespace collapses across element boundaries");
-
-// Edge 20.10240.16384.0 fails; doesn't collapse
-test("<div><span>abc </span><span style='white-space:pre'></span> def", "abc def", "Whitespace collapses across element boundaries");
-
-/**** Soft line breaks ****/
-
-test("<div style='width:0'>abc def", "abc def", "Soft line breaks ignored");
-
-/**** &nbsp; ****/
-
-test("<div>&nbsp;", "\xA0", "&nbsp; preserved");
-
-/**** display:none ****/
-
-// Gecko 44.0 nightly fails; returns nothing for display:none container
-test("<div style='display:none'>abc", "abc", "display:none container");
-
-// XXX respec this to just return textContent for display:none containers, like Chrome,
-// and just walk the CSS box tree to get text otherwise?
-
-// Gecko 44.0 nightly fails; returns nothing for display:none container
-// Chrome 47.0.2522.1 fails; returns textContent
-test("<div style='display:none'>abc  def", "abc def", "Whitespace compression in display:none container");
-
-// Gecko 44.0 nightly fails; returns nothing for display:none container
-// Edge 20.10240.16384.0 fails; does not remove trailing whitespace
-// Chrome 47.0.2522.1 fails; returns textContent
-test("<div style='display:none'> abc def ", "abc def", "Remove leading/trailing whitespace in display:none container");
-
-test("<div>123<span style='display:none'>abc", "123", "display:none child not rendered");
-
-/**** visibility:hidden ****/
-
-// Edge 20.10240.16384.0 fails; ignores visibility:hidden
-test("<div style='visibility:hidden'>abc", "", "visibility:hidden container");
-
-// Edge 20.10240.16384.0 fails; ignores visibility:hidden
-test("<div>123<span style='visibility:hidden'>abc", "123", "visibility:hidden child not rendered");
-
-// Edge 20.10240.16384.0 fails; ignores visibility:hidden
-test("<div style='visibility:hidden'>123<span style='visibility:visible'>abc", "abc", "visibility:visible child rendered");
-
-/**** opacity:0 ****/
-
-test("<div style='opacity:0'>abc", "abc", "display:none container");
-test("<div style='opacity:0'>abc  def", "abc def", "Whitespace compression in opacity:0 container");
-
-// Gecko 44.0 nightly fails; preserves leading/trailing whitespace
-// Edge 20.10240.16384.0 fails; does not remove trailing whitespace
-test("<div style='opacity:0'> abc def ", "abc def", "Remove leading/trailing whitespace in opacity:0 container");
-
-test("<div>123<span style='opacity:0'>abc", "123abc", "opacity:0 child rendered");
-
-/**** generated content ****/
-
-test("<div class='before'>", "", "Generated content not included");
-test("<div><div class='before'>", "", "Generated content on child not included");
-
-/**** innerText on replaced elements ****/
-
-// Gecko 44.0 nightly fails; ignores button content
-test("<button>abc", "abc", "<button> contents preserved");
-
-test("<fieldset>abc", "abc", "<fieldset> contents preserved");
-test("<fieldset><legend>abc", "abc", "<fieldset> <legend> contents preserved");
-
-test("<input type='text' value='abc'>", "", "<input> contents ignored");
-
-// Gecko 44.0 nightly fails; includes textarea content
-// Edge 20.10240.16384.0 fails; includes textarea content
-test("<textarea>abc", "", "<textarea> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes select content
-test("<select size='1'><option>abc</option><option>def", "", "<select size='1'> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes select content
-test("<select size='2'><option>abc</option><option>def", "", "<select size='2'> contents ignored");
-
-// Gecko 44.0 nightly fails; includes iframe content
-// Edge 20.10240.16384.0 fails; includes iframe content
-test("<iframe>abc", "", "<iframe> contents ignored");
-
-test("<iframe src='data:text/html,abc'>", ""," <iframe> subdocument ignored");
-
-// Chrome 47.0.2522.1 fails; includes <audio> content
-// Edge 20.10240.16384.0 fails; includes <audio> content
-test("<audio>abc", "", "<audio> contents ignored");
-
-// Gecko 44.0 nightly fails; includes <video> content
-// Edge 20.10240.16384.0 fails; includes <video> content
-test("<video>abc", "", "<video> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes <canvas> content
-test("<canvas>abc", "", "<canvas> contents ignored");
-
-test("<img alt='abc'>", "", "<img> alt text ignored");
-
-/**** innerText on replaced element children ****/
-
-// Gecko 44.0 nightly fails; ignores button content
-test("<div><button>abc", "abc", "<button> contents preserved");
-
-test("<div><fieldset>abc", "abc", "<fieldset> contents preserved");
-test("<div><fieldset><legend>abc", "abc", "<fieldset> <legend> contents preserved");
-
-test("<div><input type='text' value='abc'>", "", "<input> contents ignored");
-
-// Gecko 44.0 nightly fails; includes textarea content
-// Edge 20.10240.16384.0 fails; includes textarea content
-test("<div><textarea>abc", "", "<textarea> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes select content
-test("<div><select size='1'><option>abc</option><option>def", "", "<select size='1'> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes select content
-test("<div><select size='2'><option>abc</option><option>def", "", "<select size='2'> contents ignored");
-
-// Gecko 44.0 nightly fails; includes iframe content
-// Edge 20.10240.16384.0 fails; includes iframe content
-test("<div><iframe>abc", "", "<iframe> contents ignored");
-
-test("<div><iframe src='data:text/html,abc'>", ""," <iframe> subdocument ignored");
-
-// Edge 20.10240.16384.0 fails; includes <audio> content
-test("<div><audio>abc", "", "<audio> contents ignored");
-
-// Gecko 44.0 nightly fails; includes <video> content
-// Edge 20.10240.16384.0 fails; includes <video> content
-test("<div><video>abc", "", "<video> contents ignored");
-
-// Edge 20.10240.16384.0 fails; includes <canvas> content
-test("<div><canvas>abc", "", "<canvas> contents ignored");
-
-// Gecko 44.0 nightly fails; includes <img> alt text
-test("<div><img alt='abc'>", "", "<img> alt text ignored");
-
-/**** Lines around blocks ****/
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>123<div>abc</div>def", "123\nabc\ndef", "Newline at block boundary");
-
-// Gecko 44.0 nightly fails; ignores block style
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>123<span style='display:block'>abc</span>def", "123\nabc\ndef", "Newline at display:block boundary");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<div></div>def", "abc\ndef", "Empty block induces single line break");
-test("<div>abc<div></div><div></div>def", "abc\ndef", "Consecutive empty blocks ignored");
-
-test("<div><p>abc", "abc", "No blank lines around <p> alone");
-
-// Gecko 44.0 nightly fails; has line break after <p>
-test("<div><p>abc</p> ", "abc", "No blank lines around <p> followed by only collapsible whitespace");
-
-// Gecko 44.0 nightly fails; has blank line before <p>
-test("<div> <p>abc</p>", "abc", "No blank lines around <p> preceded by only collapsible whitespace");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div><p>abc<p>def", "abc\n\ndef", "Blank line between consecutive <p>s");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div><p>abc</p> <p>def", "abc\n\ndef", "Blank line between consecutive <p>s separated only by collapsible whitespace");
-
-// Edge 20.10240.16384.0 fails; includes CR and has two blank lines
-test("<div><p>abc</p><div></div><p>def", "abc\n\ndef", "Blank line between consecutive <p>s separated only by empty block");
-
-// Gecko 44.0 nightly fails; has blank line before <p>
-// Edge 20.10240.16384.0 fails; includes CR and has two blank lines
-test("<div><p>abc</p><div>123</div><p>def", "abc\n\n123\n\ndef", "Blank lines between <p>s separated by non-empty block");
-
-// Gecko 44.0 nightly fails; has leading blank line before <p>
-// Edge 20.10240.16384.0 fails; includes CR and has leading blank line before <p>
-// Chrome 47.0.2522.1 fails; has blank line after <p>
-test("<div>abc<div><p>123</p></div>def", "abc\n\n123\n\ndef", "Blank lines around a <p> in its own block");
-
-// Gecko 44.0 nightly fails; has blank line before <p>
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<p>def", "abc\n\ndef", "Blank line before <p>");
-
-// Edge 20.10240.16384.0 fails; includes CR
-// Chrome 47.0.2522.1 fails; has blank line after <p>
-test("<div><p>abc</p>def", "abc\n\ndef", "Blank line after <p>");
-
-// Edge 20.10240.16384.0 fails; inserts multiple blank lines
-test("<div><p>abc<p></p><p></p><p>def", "abc\n\ndef", "One blank line between <p>s, ignoring empty <p>s");
-
-// Edge 20.10240.16384.0 fails; ignores visibility
-// Chrome 47.0.2522.1 fails; lets <p> apply extra line breaks
-test("<div style='visibility:hidden'><p><span style='visibility:visible'>abc</span></p>\n<div style='visibility:visible'>def</div>",
-     "abc\ndef", "Invisible <p> doesn't induce extra line breaks");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<div style='margin:2em'>def", "abc\ndef", "No blank lines around <div> with margin");
-
-test("<div>123<span style='display:inline-block'>abc</span>def", "123abcdef", "No newlines at display:inline-block boundary");
-
-// Gecko 44.0 nightly fails; ignores block style
-// Edge 20.10240.16384.0 fails; preserves trailing whitespace
-// Chrome 47.0.2522.1 fails; preserves leading and trailing whitespace
-test("<div>123<span style='display:inline-block'> abc </span>def", "123abcdef", "Leading/trailing space removal at display:inline-block boundary");
-
-/**** Spans ****/
-
-test("<div>123<span>abc</span>def", "123abcdef", "<span> boundaries are irrelevant");
-test("<div>123<em>abc</em>def", "123abcdef", "<em> gets no special treatment");
-test("<div>123<b>abc</b>def", "123abcdef", "<b> gets no special treatment");
-test("<div>123<i>abc</i>def", "123abcdef", "<i> gets no special treatment");
-test("<div>123<strong>abc</strong>def", "123abcdef", "<strong> gets no special treatment");
-test("<div>123<tt>abc</tt>def", "123abcdef", "<tt> gets no special treatment");
-test("<div>123<code>abc</code>def", "123abcdef", "<code> gets no special treatment");
-
-/**** Soft hyphen ****/
-
-test("<div>abc&shy;def", "abc\xADdef", "soft hyphen preserved");
-test("<div style='width:0'>abc&shy;def", "abc\xADdef", "soft hyphen preserved");
-
-/**** Tables ****/
-
-// Gecko 44.0 nightly fails; preserves whitespace
-// Edge 20.10240.16384.0 fails; preserves whitespace
-test("<div><table style='white-space:pre'>  <td>abc</td>  </table>", "abc", "Ignoring non-rendered table whitespace");
-
-// Edge 20.10240.16384.0 fails; does not introduce tabs
-test("<div><table><tr><td>abc<td>def</table>", "abc\tdef", "Tab-separated table cells");
-
-// Edge 20.10240.16384.0 fails; does not introduce tabs
-test("<div><table><tr><td>abc<td><td>def</table>", "abc\t\tdef", "Tab-separated table cells including empty cells");
-
-// Edge 20.10240.16384.0 fails; does not introduce tabs
-test("<div><table><tr><td>abc<td><td></table>", "abc\t\t", "Tab-separated table cells including trailing empty cells");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div><table><tr><td>abc<tr><td>def</table>", "abc\ndef", "Newline-separated table rows");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<table><td>def</table>ghi", "abc\ndef\nghi", "Newlines around table");
-
-/**** Table captions ****/
-
-// Edge 20.10240.16384.0 fails; includes extra blank line
-test("<div><table><tr><td>abc<caption>def</caption></table>", "abc\ndef", "Newline between cells and caption");
-
-/**** display:table ****/
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces space instead of tab
-test("<div><div class='table'><span class='cell'>abc</span>\n<span class='cell'>def</span></div>", "abc\tdef", "Tab-separated table cells");
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces space instead of newline
-test("<div><div class='table'><span class='row'><span class='cell'>abc</span></span>\n<span class='row'><span class='cell'>def</span></span></div>", "abc\ndef", "Newline-separated table rows");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<div class='table'><span class='cell'>def</span></div>ghi", "abc\ndef\nghi", "Newlines around table");
-
-/**** display:inline-table ****/
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces space instead of tab
-// Chrome 47.0.2522.1 fails; has trailing space
-test("<div><div class='itable'><span class='cell'>abc</span>\n<span class='cell'>def</span></div>", "abc\tdef", "Tab-separated table cells");
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces space instead of newline
-// Chrome 47.0.2522.1 fails; has trailing space
-test("<div><div class='itable'><span class='row'><span class='cell'>abc</span></span>\n<span class='row'><span class='cell'>def</span></span></div>", "abc\ndef", "Newline-separated table rows");
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces newlines
-// Chrome 47.0.2522.1 fails; introduces spaces
-test("<div>abc<div class='itable'><span class='cell'>def</span></div>ghi", "abcdefghi", "No newlines around inline-table");
-
-// Gecko 44.0 nightly fails; ignores 'display'
-// Edge 20.10240.16384.0 fails; introduces newlines
-// Chrome 47.0.2522.1 fails; introduces spaces and tab
-test("<div>abc<div class='itable'><span class='row'><span class='cell'>def</span></span>\n<span class='row'><span class='cell'>123</span></span></div>ghi", "abcdef\n123ghi", "Single newline in two-row inline-table");
-
-/**** Lists ****/
-
-// Gecko 44.0 nightly fails; indents items
-test("<div><ol><li>abc", "abc", "<ol> list items get no special treatment");
-
-// Gecko 44.0 nightly fails; indents items
-test("<div><ul><li>abc", "abc", "<ul> list items get no special treatment");
-
-/**** Misc elements ****/
-
-// Gecko 44.0 nightly fails; ignores <script>
-test("<div><script style='display:block'>abc", "abc", "display:block <script> is rendered");
-
-// Gecko 44.0 nightly fails; ignores <style>
-test("<div><style style='display:block'>abc", "abc", "display:block <style> is rendered");
-
-test("<div><noscript style='display:block'>abc", "", "display:block <noscript> is not rendered (it's not parsed!)");
-
-// Chrome 47.0.2522.1 fails; renders nothing
-test("<div><template style='display:block'>abc", "abc", "display:block <template> is rendered");
-
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<br>def", "abc\ndef", "<br> induces line break");
-
-// Gecko 44.0 nightly fails; ignores <hr>
-// Edge 20.10240.16384.0 fails; includes CR
-test("<div>abc<hr>def", "abc\ndef", "<hr> induces line break");
-
-test("<div>abc<!--comment-->def", "abcdef", "comment ignored");
-
-/**** text-transform ****/
-
-// Gecko 44.0 nightly fails; text-transform not applied
-// Edge 20.10240.16384.0 fails; text-transform not applied
-test("<div><div style='text-transform:uppercase'>abc", "ABC", "text-transform is applied");
-
-/**** block-in-inline ****/
-
-// Edge 20.10240.16384.0 fails; includes CRs
-test("<div>abc<span>123<div>456</div>789</span>def", "abc123\n456\n789def", "block-in-inline doesn't add unnecessary newlines");
-
-/**** floats ****/
-
-// Edge 20.10240.16384.0 fails; includes CRs
-// Chrome 47.0.2522.1 fails; linebreaks suppressed
-test("<div>abc<div style='float:left'>123</div>def", "abc\n123\ndef", "floats have no effect");
-
-test("<div>abc<span style='float:left'>123</span>def", "abc123def", "floats have no effect");
-
-/**** position ****/
-
-// Edge 20.10240.16384.0 fails; includes CRs
-// Chrome 47.0.2522.1 fails; linebreaks suppressed
-test("<div>abc<div style='position:absolute'>123</div>def", "abc\n123\ndef", "position:absolute has no effect");
-
-test("<div>abc<span style='position:absolute'>123</span>def", "abc123def", "position:absolute has no effect");
-
-// Edge 20.10240.16384.0 fails; includes CRs
-test("<div>abc<div style='position:relative'>123</div>def", "abc\n123\ndef", "position:relative has no effect");
-
-test("<div>abc<span style='position:relative'>123</span>def", "abc123def", "position:relative has no effect");
-
-/**** text-overflow:ellipsis ****/
-
-test("<div style='overflow:hidden'>abc", "abc", "overflow:hidden ignored");
-
-// Chrome 47.0.2522.1 fails; skips text with width:0 overflow:hidden
-test("<div style='width:0; overflow:hidden'>abc", "abc", "overflow:hidden ignored even with zero width");
-
-// Chrome 47.0.2522.1 fails; skips text with height:0 overflow:hidden
-test("<div style='height:0; overflow:hidden'>abc", "abc", "overflow:hidden ignored even with zero height");
-
-// Chrome 47.0.2522.1 fails; skips text with width:0 overflow:hidden
-test("<div style='width:0; overflow:hidden; text-overflow:ellipsis'>abc", "abc", "text-overflow:ellipsis ignored");
-
 </script>
+<script src="getter-tests.js"></script>
