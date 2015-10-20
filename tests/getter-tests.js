@@ -187,6 +187,9 @@ testText("<div><table><tr><td>abc<td><td>def</table>", "abc\t\tdef", "Tab-separa
 testText("<div><table><tr><td>abc<td><td></table>", "abc\t\t", "Tab-separated table cells including trailing empty cells");
 testText("<div><table><tr><td>abc<tr><td>def</table>", "abc\ndef", "Newline-separated table rows");
 testText("<div>abc<table><td>def</table>ghi", "abc\ndef\nghi", "Newlines around table");
+testText("<div><table style='border-collapse:collapse'><tr><td>abc<td>def</table>", "abc\tdef",
+         "Tab-separated table cells in a border-collapse table");
+testText("<div><table><tfoot>x</tfoot><tbody>y</tbody></table>", "xy", "tfoot not reordered");
 
 /**** Table captions ****/
 
@@ -263,3 +266,16 @@ testText("<div style='width:0; overflow:hidden; text-overflow:ellipsis'>abc", "a
 
 testText("<svg>abc", undefined, "innerText not supported on SVG elements");
 testText("<math>abc", undefined, "innerText not supported on MathML elements");
+
+/**** Ruby ****/
+
+testText("<div><ruby>abc<rp>(</rp><rt>def</rt><rp>)</rp></ruby>", "abc(def)", "<rp> rendered");
+testText("<div><rp>abc</rp>", "abc", "Lone <rp> rendered");
+testText("<div><rp> abc </rp>", " abc ", "Lone <rp> rendered without whitespace trimming");
+testText("<div><rp style='display:block'>abc</rp>def", "abc\ndef", "display:block <rp> induces line breaks");
+testText("<div><rp style='display:block'> abc </rp>def", " abc \ndef", "display:block <rp> induces line breaks but doesn't trim whitespace");
+
+/**** Shadow DOM ****/
+
+testText("<div class='shadow'>", "", "Shadow DOM contents ignored");
+testText("<div><div class='shadow'>", "", "Shadow DOM contents ignored");

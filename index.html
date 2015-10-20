@@ -118,7 +118,9 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
         number of line breaks must appear at that point, but they can be collapsed with the line breaks induced
         by adjacent "required line break count" items, reminiscient to CSS margin-collapsing.)
           <ol>
-          <li>Let <em>items</em> be the result of recursively applying this procedure to each
+          <li>If the node is an <code>&lt;rp&gt;</code> element, let <em>items</em> be
+          a list containing a single item containing the node's <code>textContent</code>,
+          otherwise let <em>items</em> be the result of recursively applying this procedure to each
           child of the node and concatenating the results (producing a list of items).
           <li>If the node has no associated CSS box, return <em>items</em>. (Note:
           <em>items</em> may be non-empty due to <code>display:contents</code>.)
@@ -127,7 +129,7 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
           <li>If the node is a text node, then for each CSS text box produced by the node,
           in content order, compute the text of the box after application of the CSS white-space
           processing rules and text-transform rules (sections 4 and 2 of CSS3 Text), and
-          return a list of the resulting strings that are non-empty. The CSS white-space
+          return a list of the resulting strings. The CSS white-space
           processing rules are slightly modified: collapsible spaces at the end of lines
           are always collapsed, but they are only removed if the line is the last line of the block, or it ends with a
           <code>&lt;br&gt;</code> element. Soft hyphens should be preserved.
@@ -147,6 +149,7 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
           fall into this category.)
           <li>Return <em>items</em>.
           </ol>
+        <li>Delete any string items whose strings are empty.
         <li>Delete any runs of consecutive "required line break count" items at the
         start or end of the list.
         <li>Replace each remaining run of consecutive "required line break count" items with a string
@@ -175,6 +178,9 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
       styles are implicitly honoured. Avoiding dependence on layout would add implementation
       complexity (to Gecko, at least), because it's tricky to compute the correct styles
       for text as if first-line did not apply.
+      <p>Special handling of <code>&lt;rp&gt;</code> is not in Chrome and probably not needed
+      for Web compatibility. However the entire point of the <code>&lt;rp&gt;</code> element is
+      to make plaintext rendering of ruby intelligible, so it seems churlish to not support it.
       <p><pre class="example highlight">&lt;p id='e'&gt;Hello
    kitty
 &lt;script&gt;
