@@ -75,18 +75,34 @@ testText("<div>123<span style='display:none'>abc", "123", "display:none child no
 
 /**** display:contents ****/
 
-testText("<div style='display:contents'>abc", "abc", "display:contents container");
-testText("<div><div style='display:contents'>abc", "abc", "display:contents container");
-testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
-testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
-testText("<div style='display:contents'>   ", "", "display:contents not processed via textContent");
-testText("<div><div style='display:contents'>   ", "", "display:contents not processed via textContent");
+if (CSS.supports("display", "contents")) {
+  testText("<div style='display:contents'>abc", "abc", "display:contents container");
+  testText("<div><div style='display:contents'>abc", "abc", "display:contents container");
+  testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
+  testText("<div>123<span style='display:contents'>abc", "123abc", "display:contents rendered");
+  testText("<div style='display:contents'>   ", "", "display:contents not processed via textContent");
+  testText("<div><div style='display:contents'>   ", "", "display:contents not processed via textContent");
+}
 
 /**** visibility:hidden ****/
 
 testText("<div style='visibility:hidden'>abc", "", "visibility:hidden container");
 testText("<div>123<span style='visibility:hidden'>abc", "123", "visibility:hidden child not rendered");
 testText("<div style='visibility:hidden'>123<span style='visibility:visible'>abc", "abc", "visibility:visible child rendered");
+
+/**** visibility:collapse ****/
+
+testText("<table><tbody style='visibility:collapse'><tr><td>abc", "", "visibility:collapse row-group");
+testText("<table><tr style='visibility:collapse'><td>abc", "", "visibility:collapse row");
+testText("<table><tr><td style='visibility:collapse'>abc", "", "visibility:collapse cell");
+testText("<table><tbody style='visibility:collapse'><tr><td style='visibility:visible'>abc", "abc",
+         "visibility:collapse row-group with visible cell");
+testText("<table><tr style='visibility:collapse'><td style='visibility:visible'>abc", "abc",
+         "visibility:collapse row with visible cell");
+testText("<div style='display:flex'><span style='visibility:collapse'>1</span><span>2</span></div>",
+         "2", "visibility:collapse honored on flex item");
+testText("<div style='display:grid'><span style='visibility:collapse'>1</span><span>2</span></div>",
+         "2", "visibility:collapse honored on grid item");
 
 /**** opacity:0 ****/
 
@@ -190,6 +206,8 @@ testText("<div>abc<table><td>def</table>ghi", "abc\ndef\nghi", "Newlines around 
 testText("<div><table style='border-collapse:collapse'><tr><td>abc<td>def</table>", "abc\tdef",
          "Tab-separated table cells in a border-collapse table");
 testText("<div><table><tfoot>x</tfoot><tbody>y</tbody></table>", "xy", "tfoot not reordered");
+testText("<table><tfoot><tr><td>footer</tfoot><thead><tr><td style='visibility:collapse'>thead</thead><tbody><tr><td>tbody</tbody></table>",
+         "footer\n\ntbody", "");
 
 /**** Table captions ****/
 
@@ -271,11 +289,34 @@ testText("<math>abc", undefined, "innerText not supported on MathML elements");
 
 testText("<div><ruby>abc<rp>(</rp><rt>def</rt><rp>)</rp></ruby>", "abc(def)", "<rp> rendered");
 testText("<div><rp>abc</rp>", "abc", "Lone <rp> rendered");
+testText("<div><rp style='visibility:hidden'>abc</rp>", "", "visibility:hidden <rp> not rendered");
 testText("<div><rp> abc </rp>", " abc ", "Lone <rp> rendered without whitespace trimming");
 testText("<div><rp style='display:block'>abc</rp>def", "abc\ndef", "display:block <rp> induces line breaks");
 testText("<div><rp style='display:block'> abc </rp>def", " abc \ndef", "display:block <rp> induces line breaks but doesn't trim whitespace");
+// XXX this is not desirable but the spec currently requires it.
+testText("<div><select class='poke-rp'></select>", "abc", "<rp> in a replaced element still renders");
 
 /**** Shadow DOM ****/
 
-testText("<div class='shadow'>", "", "Shadow DOM contents ignored");
-testText("<div><div class='shadow'>", "", "Shadow DOM contents ignored");
+if ("createShadowRoot" in document.body) {
+  testText("<div class='shadow'>", "", "Shadow DOM contents ignored");
+  testText("<div><div class='shadow'>", "", "Shadow DOM contents ignored");
+}
+
+/**** Flexbox ****/
+
+if (CSS.supports('display', 'flex')) {
+  testText("<div style='display:flex'><div style='order:1'>1</div><div>2</div></div>",
+           "1\n2", "CSS 'order' property ignored");
+  testText("<div style='display:flex'><span>1</span><span>2</span></div>",
+           "1\n2", "Flex items blockified");
+}
+
+/**** Grid ****/
+
+if (CSS.supports('display', 'grid')) {
+  testText("<div style='display:grid'><div style='order:1'>1</div><div>2</div></div>",
+           "1\n2", "CSS 'order' property ignored");
+  testText("<div style='display:grid'><span>1</span><span>2</span></div>",
+           "1\n2", "Grid items blockified");
+}

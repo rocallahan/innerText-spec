@@ -118,14 +118,15 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
         number of line breaks must appear at that point, but they can be collapsed with the line breaks induced
         by adjacent "required line break count" items, reminiscient to CSS margin-collapsing.)
           <ol>
-          <li>If the node is an <code>&lt;rp&gt;</code> element, let <em>items</em> be
-          a list containing a single item containing the node's <code>textContent</code>,
-          otherwise let <em>items</em> be the result of recursively applying this procedure to each
+          <li>Let <em>items</em> be the result of recursively applying this procedure to each
           child of the node and concatenating the results (producing a list of items).
+          <li>If the node's computed value of <code>visibility</code> is not <code>visible</code>,
+          return <em>items</em>.
+          <li>If the node is a text node child of an <code>&lt;rp&gt;</code>, return
+          a single string item containing the text of the node. (<code>&lt;rp&gt;</code> is normally
+          <code>display:none</code> but we want to include its text.)
           <li>If the node has no associated CSS box, return <em>items</em>. (Note:
           <em>items</em> may be non-empty due to <code>display:contents</code>.)
-          <li>If the node's computed value of <code>visibility</code> is <code>hidden</code>,
-          return <em>items</em>.
           <li>If the node is a text node, then for each CSS text box produced by the node,
           in content order, compute the text of the box after application of the CSS white-space
           processing rules and text-transform rules (sections 4 and 2 of CSS3 Text), and
@@ -181,6 +182,9 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
       <p>Special handling of <code>&lt;rp&gt;</code> is not in Chrome and probably not needed
       for Web compatibility. However the entire point of the <code>&lt;rp&gt;</code> element is
       to make plaintext rendering of ruby intelligible, so it seems churlish to not support it.
+      As specified, an <code>&lt;rp&gt;</code> in a context where CSS boxes would not normally
+      be created (e.g. inside a <code>&lt;select&gt;</code>) will contribute its text, but there's
+      no simple way to avoid that. In practice this is unlikely to be a problem.
       <p><pre class="example highlight">&lt;p id='e'&gt;Hello
    kitty
 &lt;script&gt;

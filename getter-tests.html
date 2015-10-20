@@ -19,14 +19,16 @@
 #results > thead > tr > td { padding:8px; }
 #results_body > tr > td { padding:3px; }
 #results_body > tr > td:not(.comment) { border:1px solid black; }
-#results_body > tr { color:red; }
-#results_body > .ok { color:green; }
+#results_body > tr, #fails_elem { color:red; }
+#results_body > .ok, #passes_elem { color:green; }
 #container {
   position:fixed;
   top:0;
   right:0;
 }
 </style>
+<p><span id="passes_elem"><span id="passes_out">0</span> passes</span>,
+<span id="fails_elem"><span id="fails_out">0</span> fails</span>
 <table id="results">
   <thead>
     <tr><td>HTML<td>Expected innerText<td>Result
@@ -55,6 +57,8 @@ function clickResult(event) {
   }
   alert(vals.join(','));
 }
+var passes = 0;
+var fails = 0;
 function testText(html, expectedPlain, msg) {
   container.innerHTML = html;
   var e = document.getElementById('target');
@@ -65,12 +69,16 @@ function testText(html, expectedPlain, msg) {
   for (var i = 0; i < pokes.length; ++i) {
     pokes[i].textContent = 'abc';
   }
+  pokes = document.getElementsByClassName('poke-rp');
+  for (var i = 0; i < pokes.length; ++i) {
+    var rp = document.createElement("rp");
+    rp.textContent = "abc";
+    pokes[i].appendChild(rp);
+  }
   var shadows = document.getElementsByClassName('shadow');
   for (var i = 0; i < shadows.length; ++i) {
-    if ("createShadowRoot" in shadows[i]) {
-      var s = shadows[i].createShadowRoot();
-      s.textContent = 'abc';
-    }
+    var s = shadows[i].createShadowRoot();
+    s.textContent = 'abc';
   }
   while (e && e.nodeType != Node.ELEMENT_NODE) {
     e = e.nextSibling;
@@ -94,6 +102,7 @@ function testText(html, expectedPlain, msg) {
   row.appendChild(td4);
   if (t == expectedPlain) {
     row.classList.add("ok");
+    passes_out.textContent = ++passes;
   } else {
     if (t == undefined) {
       t = "";
@@ -111,6 +120,7 @@ function testText(html, expectedPlain, msg) {
     if (t.length != expectedPlain.length) {
       td4.textContent += " (lengths differ: " + t.length + ", expected " + expectedPlain.length + ")";
     }
+    fails_out.textContent = ++fails;
   }
   results_body.appendChild(row);
 }

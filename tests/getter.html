@@ -25,12 +25,16 @@ function testText(html, expectedPlain, msg) {
     for (var i = 0; i < pokes.length; ++i) {
       pokes[i].textContent = 'abc';
     }
+    pokes = document.getElementsByClassName('poke-rp');
+    for (var i = 0; i < pokes.length; ++i) {
+      var rp = document.createElement("rp");
+      rp.textContent = "abc";
+      pokes[i].appendChild(rp);
+    }
     var shadows = document.getElementsByClassName('shadow');
     for (var i = 0; i < shadows.length; ++i) {
-      if ("createShadowRoot" in shadows[i]) {
-        var s = shadows[i].createShadowRoot();
-        s.textContent = 'abc';
-      }
+      var s = shadows[i].createShadowRoot();
+      s.textContent = 'abc';
     }
     while (e && e.nodeType != Node.ELEMENT_NODE) {
       e = e.nextSibling;
