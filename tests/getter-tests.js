@@ -183,6 +183,8 @@ testText("<div>123<span style='display:inline-block'> abc </span>def", "123abcde
 /**** Spans ****/
 
 testText("<div>123<span>abc</span>def", "123abcdef", "<span> boundaries are irrelevant");
+testText("<div>123 <span>abc</span> def", "123 abc def", "<span> boundaries are irrelevant");
+testText("<div style='width:0'>123 <span>abc</span> def", "123 abc def", "<span> boundaries are irrelevant");
 testText("<div>123<em>abc</em>def", "123abcdef", "<em> gets no special treatment");
 testText("<div>123<b>abc</b>def", "123abcdef", "<b> gets no special treatment");
 testText("<div>123<i>abc</i>def", "123abcdef", "<i> gets no special treatment");
