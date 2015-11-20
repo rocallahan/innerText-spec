@@ -110,8 +110,9 @@ var s = e.innerHTML; // "Hello&lt;br&gt;kitty"
         already bail out for those elements and just return their <code>textContent</code>, so we can
         follow suit. So:
         <ol>
-        <li>If the element is <code>display:none</code> or not in a document with a browsing context,
-        return the same value as the element's <code>textContent</code>.
+        <li>If the element is <code>display:none</code> or has a <code>display:none</code> ancestor,
+        or is not in a document with a browsing context, return the same value as the element's
+        <code>textContent</code>.
         <li>Compute a list of items each of which may be a string or a "required line break count",
         a positive integer, by applying the following recursive procedure to each child node of the element in DOM
         order and concatenating the results. (Intuitively, a "required line break count" item means that a certain
