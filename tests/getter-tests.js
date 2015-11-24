@@ -178,8 +178,12 @@ testText("<div>abc<div><p>123</p></div>def", "abc\n\n123\n\ndef", "Blank lines a
 testText("<div>abc<p>def", "abc\n\ndef", "Blank line before <p>");
 testText("<div><p>abc</p>def", "abc\n\ndef", "Blank line after <p>");
 testText("<div><p>abc<p></p><p></p><p>def", "abc\n\ndef", "One blank line between <p>s, ignoring empty <p>s");
-testText("<div style='visibility:hidden'><p><span style='visibility:visible'>abc</span></p>\n<div style='visibility:visible'>def</div>",
+testText("<div>abc<p style='visibility:hidden'>123</p><div>def</div>",
      "abc\ndef", "Invisible <p> doesn't induce extra line breaks");
+testText("<div style='visibility:hidden'><p><span style='visibility:visible'>abc</span></p><div style='visibility:visible'>def</div>",
+     "abc\ndef", "Invisible <p> doesn't induce extra line breaks");
+testText("<div><div style='visibility:hidden'><p>abc</p><p>abc</p><p>abc</p></div><div>def</div>",
+     "def", "Invisible <p>s don't induce extra line breaks");
 testText("<div>abc<div style='margin:2em'>def", "abc\ndef", "No blank lines around <div> with margin");
 testText("<div>123<span style='display:inline-block'>abc</span>def", "123abcdef", "No newlines at display:inline-block boundary");
 testText("<div>123<span style='display:inline-block'> abc </span>def", "123abcdef", "Leading/trailing space removal at display:inline-block boundary");
